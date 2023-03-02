@@ -15,12 +15,26 @@
 - 免费版OpenAI的调用速度限制为20次/min
 # 安装
 
+* 目前插件仅支持下载至本地安装
+  ```
+  git clone https://github.com/Alpaca4610/nonebot-plugin-gpt3.5-turbo.git
+  ```
+
+  下载完成后在bot项目的pyproject.toml文件手动添加插件：
+
+  ```
+  plugin_dirs = ["xxxxxx","xxxxxx",......,"下载完成的插件路径/nonebot-plugin-gpt3.5-turbo"]
+  ```
 
 # 配置文件
 
 在Bot根目录下的.env文件中追加如下内容：
 
 ```
-
 OPENAI_API_KEY = key
 OPENAI_MODEL_NAME = "gpt-3.5-turbo"
+```
+
+# 使用方法
+
+- @机器人发送问题即可
