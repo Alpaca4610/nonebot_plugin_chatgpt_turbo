@@ -6,6 +6,7 @@
 
 <div align="center">
 
+</div>
 # nonebot-plugin-gpt3.5-turbo
 # 介绍
 - 本插件适配OpenAI在2023年3月1日发布的最新版API，可以在nonebot中调用OpenAI的ChatGPT生产环境下的模型（GPT3.5-turbo）进行回复。
@@ -22,5 +23,3 @@
 
 OPENAI_API_KEY = key
 OPENAI_MODEL_NAME = "gpt-3.5-turbo"
-
-、、、
