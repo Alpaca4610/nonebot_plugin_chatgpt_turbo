@@ -6,8 +6,9 @@
 
 <div align="center">
 
-</div>
 # nonebot-plugin-gpt3.5-turbo
+</div>
+
 # 介绍
 - 本插件适配OpenAI在2023年3月1日发布的最新版API，可以在nonebot中调用OpenAI的ChatGPT生产环境下的模型（GPT3.5-turbo）进行回复。
 - 接口调用速度与网络环境有关，经过测试，大陆外的服务器的OpenAI API响应时间能在十秒之内。
