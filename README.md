@@ -15,7 +15,7 @@
 - 免费版OpenAI的调用速度限制为20次/min
 # 安装
 
-* 目前插件仅支持下载至本地安装
+* 手动安装
   ```
   git clone https://github.com/Alpaca4610/nonebot-plugin-gpt3.5-turbo.git
   ```
@@ -24,6 +24,10 @@
 
   ```
   plugin_dirs = ["xxxxxx","xxxxxx",......,"下载完成的插件路径/nonebot-plugin-gpt3.5-turbo"]
+  ```
+* 使用 pip
+  ```
+  pip install nonebot-plugin-chatgpt-turbo
   ```
 
 # 配置文件
