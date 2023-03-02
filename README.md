@@ -6,7 +6,7 @@
 
 <div align="center">
 
-# nonebot-plugin-gpt3.5-turbo
+# nonebot-plugin-chatgpt-turbo
 </div>
 
 # 介绍
