@@ -7,8 +7,12 @@ from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import (Message, MessageSegment)
 from nonebot.adapters.onebot.v11 import MessageEvent
 
-api_key = nonebot.get_driver().config.openai_api_key
-model_id = nonebot.get_driver().config.openai_model_name
+try:
+    api_key = nonebot.get_driver().config.openai_api_key
+    model_id = nonebot.get_driver().config.openai_model_name
+except:
+    api_key = ""
+    model_id = "gpt-3.5-turbo"
 
 
 async def get_response(user_id, content):
