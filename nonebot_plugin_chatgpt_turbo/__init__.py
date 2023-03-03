@@ -6,6 +6,7 @@ from nonebot.params import CommandArg
 from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import (Message, MessageSegment)
 from nonebot.adapters.onebot.v11 import MessageEvent
+from aiohttp import ClientSession
 
 try:
     api_key = nonebot.get_driver().config.openai_api_key
@@ -17,16 +18,17 @@ except:
 
 async def get_response(user_id, content):
     openai.api_key = api_key
+
     res_ = openai.ChatCompletion.create(
         model=model_id,
         messages=[
             {"role": "user", "content": content}
         ]
     )
-
+    
     res = res_.choices[0].message.content
 
-    while (res.startswith("\n") != res.startswith("？")):
+    while res.startswith("\n") != res.startswith("？"):
         res = res[1:]
     print(res)
 
@@ -47,7 +49,10 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
     await chat_request.send(MessageSegment.text("ChatGPT正在思考中......"))
 
     try:
+        openai.aiosession.set(ClientSession())
         res = await get_response(event.user_id, content)
+        await openai.aiosession.get().close()
+
     except Exception as error:
         await chat_request.finish(str(error))
     await chat_request.finish(MessageSegment.text(res))
