@@ -1,5 +1,6 @@
 import openai
 import nonebot
+import asyncio
 
 from nonebot import on_command
 from nonebot.params import CommandArg
@@ -16,7 +17,7 @@ except:
     model_id = "gpt-3.5-turbo"
 
 
-async def get_response(user_id, content):
+def get_response(user_id, content):
     openai.api_key = api_key
 
     res_ = openai.ChatCompletion.create(
@@ -48,9 +49,10 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
 
     await chat_request.send(MessageSegment.text("ChatGPT正在思考中......"))
 
+    loop =  asyncio.get_event_loop()
     try:
         openai.aiosession.set(ClientSession())
-        res = await get_response(event.user_id, content)
+        res = await loop.run_in_executor(None, get_response, event.user_id, content)
         await openai.aiosession.get().close()
 
     except Exception as error:
