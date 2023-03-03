@@ -17,7 +17,7 @@
 
 * 手动安装
   ```
-  git clone https://github.com/Alpaca4610/nonebot-plugin-chatgpt-turbo.git
+  git clone https://github.com/Alpaca4610/nonebot_plugin_chatgpt_turbo.git
   ```
 
   下载完成后在bot项目的pyproject.toml文件手动添加插件：
