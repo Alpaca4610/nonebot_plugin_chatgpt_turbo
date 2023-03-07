@@ -42,12 +42,10 @@ OPENAI_MODEL_NAME = "gpt-3.5-turbo"
 
 可选内容：
 ```
-OPENAI_MAX_HISTORY_LIMIT = 30
-OPENAI_HTTP_PROXY = "http://127.0.0.1:8001"
+OPENAI_MAX_HISTORY_LIMIT = 30   # 保留与每个用户的聊天记录条数
+OPENAI_HTTP_PROXY = "http://127.0.0.1:8001"    # 设置代理解决OPENAI的网络问题
 ```
 
-OPENAI_MAX_HISTORY_LIMIT：保留与每个用户的聊天记录条数
-OPENAI_HTTP_PROXY：设置代理解决OPENAI的网络问题
 
 # 使用方法
 

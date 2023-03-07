@@ -64,7 +64,7 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
 
 clear_request = on_command("/clear", block=True, priority=1)
 
-
+@clear_request.handle()
 async def _(event: MessageEvent):
     del session[event.get_session_id()]
     await clear_request.finish(MessageSegment.text("成功清除历史记录！"), at_sender=True)
