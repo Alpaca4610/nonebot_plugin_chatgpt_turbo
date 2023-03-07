@@ -1,6 +1,6 @@
 import nonebot
 import os
-# import asyncio
+import asyncio
 
 from nonebot import on_command
 from nonebot.params import CommandArg
@@ -48,13 +48,14 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
 
     await chat_request.send(MessageSegment.text("ChatGPT正在思考中......"))
 
-    # loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()
     if event.get_session_id() not in session:
         session[event.get_session_id()] = ChatSession(api_key=api_key, model_id=model_id, max_limit=max_limit)
 
     try:
         # openai.aiosession.set(ClientSession())
-        res = session[event.get_session_id()].get_response(content)
+        # res = session[event.get_session_id()].get_response(content)
+        res = await loop.run_in_executor(None, session[event.get_session_id()].get_response, content)
         # await openai.aiosession.get().close()
 
     except Exception as error:
