@@ -34,7 +34,8 @@ except:
 
 if http_proxy != "":
     os.environ["http_proxy"] = http_proxy
-
+    os.environ["https_proxy"] = http_proxy
+    
 
 session = {}
 
