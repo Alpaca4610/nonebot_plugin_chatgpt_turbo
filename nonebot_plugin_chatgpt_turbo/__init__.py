@@ -8,7 +8,7 @@ from nonebot.params import CommandArg
 from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import (Message, MessageSegment)
 from nonebot.adapters.onebot.v11 import MessageEvent
-# from aiohttp import ClientSession
+
 from .ChatSession import ChatSession
 
 try:
