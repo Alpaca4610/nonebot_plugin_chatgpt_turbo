@@ -9,12 +9,14 @@ class ChatSession:
         self.count = 0
         self.max_limit = max_limit
 
-    def get_response(self, content):
+    async def get_response(self, content,proxy):
         openai.api_key = self.api_key
+        if proxy != "":
+            openai.proxy = proxy
 
         try:
             self.content.append({"role": "user", "content": content})
-            res_ = openai.ChatCompletion.create(
+            res_ = await openai.ChatCompletion.acreate(
                 model=self.model_id,
                 messages=self.content
             )

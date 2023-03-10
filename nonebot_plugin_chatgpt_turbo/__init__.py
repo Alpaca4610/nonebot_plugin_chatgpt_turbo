@@ -33,9 +33,9 @@ except:
 
 
 if http_proxy != "":
-    os.environ["http_proxy"] = http_proxy
-    os.environ["https_proxy"] = http_proxy
-    
+    # os.environ["http_proxy"] = http_proxy
+    # os.environ["https_proxy"] = http_proxy
+    proxy = {'http': http_proxy, 'https': http_proxy}
 
 session = {}
 
@@ -60,10 +60,7 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
         session[event.get_session_id()] = ChatSession(api_key=api_key, model_id=model_id, max_limit=max_limit)
 
     try:
-        # openai.aiosession.set(ClientSession())
-        # res = session[event.get_session_id()].get_response(content)
-        res = await loop.run_in_executor(None, session[event.get_session_id()].get_response, content)
-        # await openai.aiosession.get().close()
+        res = await session[event.get_session_id()].get_response(content,proxy)
 
     except Exception as error:
         await chat_request.finish(str(error), at_sender=True)
@@ -73,9 +70,12 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
 # 不带上下文的聊天
 chat_request2 = on_command("", rule=to_me(), block=True, priority=1)
 
-def get_response(content):
+async def get_response(content,proxy):
     openai.api_key = api_key
-    res_ = openai.ChatCompletion.create(
+    if proxy != "":
+        openai.proxy = proxy
+
+    res_ = await openai.ChatCompletion.acreate(
         model=model_id,
         messages=[
             {"role": "user", "content": content}
@@ -102,9 +102,8 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
 
     await chat_request2.send(MessageSegment.text("ChatGPT正在思考中......"))
 
-    loop =  asyncio.get_event_loop()
     try:
-        res = await loop.run_in_executor(None, get_response, content)
+        res = await get_response(content,proxy)
 
     except Exception as error:
         await chat_request2.finish(str(error))
