@@ -44,6 +44,7 @@ OPENAI_HTTP_PROXY = "http://127.0.0.1:8001"    # 请使用代理访问api，中�
 可选内容：
 ```
 OPENAI_MAX_HISTORY_LIMIT = 30   # 保留与每个用户的聊天记录条数
+ENABLE_PRIVATE_CHAT = True   # 私聊开关，默认开启，改为False关闭
 ```
 
 
