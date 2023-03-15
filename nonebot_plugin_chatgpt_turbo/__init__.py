@@ -25,7 +25,7 @@ max_limit = plugin_config.openai_max_history_limit
 session = {}
 
 # 带上下文的聊天
-chat_request = on_command("/chat", block=True, priority=1)
+chat_request = on_command("chat", block=True, priority=1)
 
 
 @chat_request.handle()
