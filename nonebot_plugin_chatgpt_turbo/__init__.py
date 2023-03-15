@@ -40,7 +40,7 @@ if http_proxy != "":
 session = {}
 
 # 带上下文的聊天
-chat_request = on_command("/chat", block=True, priority=1)
+chat_request = on_command("chat", block=True, priority=1)
 
 
 @chat_request.handle()
