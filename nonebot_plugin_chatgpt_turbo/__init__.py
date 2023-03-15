@@ -4,39 +4,24 @@ import openai
 from nonebot import on_command
 from nonebot.params import CommandArg
 from nonebot.rule import to_me
-from nonebot.adapters.onebot.v11 import (Message, MessageSegment)
+from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent
-
+from .config import Config, ConfigError
 from .ChatSession import ChatSession
 
-try:
-    api_key = nonebot.get_driver().config.openai_api_key
-except:
-    api_key = ""
+# 能不能抄一抄，哪怕一点点也好
+plugin_config = Config.parse_obj(get_driver().config.dict())
 
-try:
-    model_id = nonebot.get_driver().config.openai_model_name
-except:
-    model_id = "gpt-3.5-turbo"
+if plugin_config.http_proxy:
+    proxy = {'http': plugin_config.http_proxy, 'https': plugin_config.http_proxy}
 
-try:
-    max_limit = nonebot.get_driver().config.openai_max_history_limit
-except:
-    max_limit = 30
 
-try:
-    http_proxy = nonebot.get_driver().config.openai_http_proxy
-except:
-    http_proxy = ""
+if not plugin_config.openai_api_key:
+    raise ConfigError("请设置 openai_api_key")
 
-try:
-    enable_private_chat = nonebot.get_driver().config.enable_private_chat
-except:
-    enable_private_chat = "True"
-
-if http_proxy != "":
-    proxy = {'http': http_proxy, 'https': http_proxy}
-
+api_key=plugin_config.openai_api_key
+model_id=plugin_config.openai_model_name
+max_limit = plugin_config.openai_max_history_limit
 session = {}
 
 # 带上下文的聊天
@@ -95,8 +80,6 @@ async def get_response(content, proxy):
 
 @chat_request2.handle()
 async def _(event: GroupMessageEvent, msg: Message = CommandArg()):
-    if api_key == "":
-        await chat_request2.finish(MessageSegment.text("请先配置openai_api_key"))
 
     content = msg.extract_plain_text()
     if content == "" or content is None:
@@ -112,7 +95,7 @@ async def _(event: GroupMessageEvent, msg: Message = CommandArg()):
     await chat_request2.finish(MessageSegment.text(res))
 
 
-clear_request = on_command("/clear", block=True, priority=1)
+clear_request = on_command("clear", block=True, priority=1)
 
 
 @clear_request.handle()
@@ -121,15 +104,13 @@ async def _(event: GroupMessageEvent):
     await clear_request.finish(MessageSegment.text("成功清除历史记录！"), at_sender=True)
 
 
-if enable_private_chat == "True":
-    private_chat_request = on_command("/chat", block=True, priority=1)
+# 写的很好，下次不要这样写了
+if plugin_config.enable_private_chat:
+    private_chat_request = on_command("chat", block=True, priority=1)
 
 
     @private_chat_request.handle()
     async def _(event: PrivateMessageEvent, msg: Message = CommandArg()):
-        if api_key == "":
-            await private_chat_request.finish(MessageSegment.text("请先配置openai_api_key"), at_sender=True)
-
         content = msg.extract_plain_text()
         if content == "" or content is None:
             await private_chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
