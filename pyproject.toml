@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-chatgpt-turbo"
-version = "0.2.3"
+version = "0.2.4"
 description = "A nonebot plugin for openai gpt3.5-turbo"
 authors = ["Alpaca <alpaca@bupt.edu.cn>"]
 license = "MIT"
