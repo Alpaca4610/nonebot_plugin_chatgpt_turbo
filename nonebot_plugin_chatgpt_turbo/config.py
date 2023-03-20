@@ -9,5 +9,6 @@ class Config(BaseModel, extra=Extra.ignore):
     openai_http_proxy: Optional[str] = None
     enable_private_chat: bool = True
 
+
 class ConfigError(Exception):
     pass

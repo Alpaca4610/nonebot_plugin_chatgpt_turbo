@@ -9,11 +9,10 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent
 from .config import Config, ConfigError
 from .ChatSession import ChatSession
 
-# 能不能抄一抄，哪怕一点点也好
-plugin_config = Config.parse_obj(get_driver().config.dict())
+plugin_config = Config.parse_obj(nonebot.get_driver().config.dict())
 
-if plugin_config.http_proxy:
-    proxy = {'http': plugin_config.http_proxy, 'https': plugin_config.http_proxy}
+if plugin_config.openai_http_proxy:
+    proxy = {'http': plugin_config.openai_http_proxy, 'https': plugin_config.openai_http_proxy}
 
 
 if not plugin_config.openai_api_key:
@@ -49,11 +48,6 @@ async def _(event: GroupMessageEvent, msg: Message = CommandArg()):
         await chat_request.finish(str(error), at_sender=True)
     await chat_request.finish(MessageSegment.text(res), at_sender=True)
 
-
-def ChatRule(event: GroupMessageEvent) -> bool:
-    return True
-
-
 # 不带上下文的聊天
 chat_request2 = on_command("", rule=to_me(), block=True, priority=99)
 
@@ -79,7 +73,7 @@ async def get_response(content, proxy):
 
 
 @chat_request2.handle()
-async def _(event: GroupMessageEvent, msg: Message = CommandArg()):
+async def _(msg: Message = CommandArg()):
 
     content = msg.extract_plain_text()
     if content == "" or content is None:
@@ -104,7 +98,6 @@ async def _(event: GroupMessageEvent):
     await clear_request.finish(MessageSegment.text("成功清除历史记录！"), at_sender=True)
 
 
-# 写的很好，下次不要这样写了
 if plugin_config.enable_private_chat:
     private_chat_request = on_command("chat", block=True, priority=1)
 
@@ -133,7 +126,7 @@ if plugin_config.enable_private_chat:
 
 
     @private_chat_request2.handle()
-    async def _(event: PrivateMessageEvent, msg: Message = CommandArg()):
+    async def _(msg: Message = CommandArg()):
         if api_key == "":
             await private_chat_request2.finish(MessageSegment.text("请先配置openai_api_key"))
 
