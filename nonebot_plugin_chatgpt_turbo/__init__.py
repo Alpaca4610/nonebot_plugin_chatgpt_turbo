@@ -122,7 +122,7 @@ if plugin_config.enable_private_chat:
 
 
     # 不带上下文的聊天
-    private_chat_request2 = on_command("", rule=to_me(), block=True, priority=1)
+    private_chat_request2 = on_command("", rule=to_me(), block=True, priority=99)
 
 
     @private_chat_request2.handle()
