@@ -9,7 +9,7 @@ class ChatSession:
         self.count = 0
         self.max_limit = max_limit
 
-    async def get_response(self, content,proxy):
+    async def get_response(self, content, proxy):
         openai.api_key = self.api_key
         if proxy != "":
             openai.proxy = proxy
@@ -30,7 +30,6 @@ class ChatSession:
             res = res[1:]
 
         self.content.append({"role": 'assistant', "content": res})
-        # print(self.content)
         self.count = self.count + 1
 
         if self.count == self.max_limit:
@@ -38,5 +37,4 @@ class ChatSession:
             self.content = []
             res += "\n历史对话达到上限，将清除历史记录"
 
-        # print(res)
         return res

@@ -13,13 +13,14 @@ plugin_config = Config.parse_obj(nonebot.get_driver().config.dict())
 
 if plugin_config.openai_http_proxy:
     proxy = {'http': plugin_config.openai_http_proxy, 'https': plugin_config.openai_http_proxy}
-
+else:
+    proxy = ""
 
 if not plugin_config.openai_api_key:
     raise ConfigError("请设置 openai_api_key")
 
-api_key=plugin_config.openai_api_key
-model_id=plugin_config.openai_model_name
+api_key = plugin_config.openai_api_key
+model_id = plugin_config.openai_model_name
 max_limit = plugin_config.openai_max_history_limit
 session = {}
 
@@ -48,6 +49,7 @@ async def _(event: GroupMessageEvent, msg: Message = CommandArg()):
         await chat_request.finish(str(error), at_sender=True)
     await chat_request.finish(MessageSegment.text(res), at_sender=True)
 
+
 # 不带上下文的聊天
 chat_request2 = on_command("", rule=to_me(), block=True, priority=99)
 
@@ -74,7 +76,6 @@ async def get_response(content, proxy):
 
 @chat_request2.handle()
 async def _(msg: Message = CommandArg()):
-
     content = msg.extract_plain_text()
     if content == "" or content is None:
         await chat_request2.finish(MessageSegment.text("内容不能为空！"))
