@@ -104,7 +104,7 @@ if plugin_config.enable_private_chat:
 
 
     @private_chat_request.handle()
-    async def _(event: PrivateMessageEvent, msg: Message = CommandArg()):
+    async def _(event: PrivateMessageEvent, msg: PrivateMessageEvent):
         content = msg.extract_plain_text()
         if content == "" or content is None:
             await private_chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
@@ -127,7 +127,7 @@ if plugin_config.enable_private_chat:
 
 
     @private_chat_request2.handle()
-    async def _(msg: Message = CommandArg()):
+    async def _(msg: PrivateMessageEvent):
         if api_key == "":
             await private_chat_request2.finish(MessageSegment.text("请先配置openai_api_key"))
 
