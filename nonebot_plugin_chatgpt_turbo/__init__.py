@@ -17,16 +17,17 @@ from .config import Config, ConfigError
 from openai import AsyncOpenAI
 
 __plugin_meta__ = PluginMetadata(
-    name="自定义人格和AI绘图的混合聊天BOT",
-    description="基于GPT4+NovelAI V3,Bot在将自然语言转换为NAI3提示词并绘图发送的同时以自定义人格与用户聊天。",
+    name="OneAPI和OpenAI聊天Bot",
+    description="具有上下文关联和多模态识别，适配OneAPI和OpenAI官方的nonebot插件。",
     usage="""
-    ** 聊天内容/作图需求
-    记忆清除 清除当前用户的聊天记录
+    @机器人发送问题时机器人不具有上下文回复的能力
+    chat 使用该命令进行问答时，机器人具有上下文回复的能力
+    lear 清除当前用户的聊天记录
     """,
     config=Config,
     extra={},
     type="application",
-    homepage="https://github.com/Alpaca4610/nonebot_plugin_nai3_bot.git",
+    homepage="https://github.com/Alpaca4610/nonebot_plugin_chatgpt_turbo",
     supported_adapters={"~onebot.v11"},
 )
 
