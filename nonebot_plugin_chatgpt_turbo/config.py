@@ -3,13 +3,11 @@ from typing import Optional
 
 
 class Config(BaseModel, extra=Extra.ignore):
-    openai_api_key: Optional[str] = ""
-    openai_model_name: Optional[str] = "gpt-3.5-turbo"
-    openai_max_history_limit: Optional[int] = 5
-    openai_http_proxy: Optional[str] = None
-    enable_private_chat: bool = True
-    chatgpt_turbo_public: bool = False  # 群聊是否开启公共会话
-
+    oneapi_key: Optional[str] = ""  # （必填）OpenAI官方或者是支持OneAPI的大模型中转服务商提供的KEY
+    oneapi_url: Optional[str] = ""  # （可选）大模型中转服务商提供的中转地址，使用OpenAI官方服务不需要填写
+    oneapi_model: Optional[str] = "gpt-4o" # （可选）使用的语言大模型，使用识图功能请填写合适的大模型名称
+    enable_private_chat: bool = True   # 是否开启私聊对话
+    # chatgpt_turbo_public: bool = True  # 是否开启群聊对话
 
 class ConfigError(Exception):
     pass

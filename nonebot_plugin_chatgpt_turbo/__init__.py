@@ -1,29 +1,50 @@
+import base64
+import httpx
 import nonebot
-import openai
 
 from nonebot import on_command
 from nonebot.params import CommandArg
 from nonebot.rule import to_me
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, MessageEvent
+from nonebot.adapters.onebot.v11 import (
+    Message,
+    MessageSegment,
+    PrivateMessageEvent,
+    MessageEvent,
+    helpers,
+)
+from nonebot.plugin import PluginMetadata
 from .config import Config, ConfigError
-from .ChatSession import ChatSession
+from openai import AsyncOpenAI
 
-# 配置导入
+__plugin_meta__ = PluginMetadata(
+    name="自定义人格和AI绘图的混合聊天BOT",
+    description="基于GPT4+NovelAI V3,Bot在将自然语言转换为NAI3提示词并绘图发送的同时以自定义人格与用户聊天。",
+    usage="""
+    ** 聊天内容/作图需求
+    记忆清除 清除当前用户的聊天记录
+    """,
+    config=Config,
+    extra={},
+    type="application",
+    homepage="https://github.com/Alpaca4610/nonebot_plugin_nai3_bot.git",
+    supported_adapters={"~onebot.v11"},
+)
+
+
 plugin_config = Config.parse_obj(nonebot.get_driver().config.dict())
 
-if plugin_config.openai_http_proxy:
-    proxy = {'http': plugin_config.openai_http_proxy, 'https': plugin_config.openai_http_proxy}
+if not plugin_config.oneapi_key:
+    raise ConfigError("请配置大模型使用的KEY")
+if plugin_config.oneapi_url:
+    client = AsyncOpenAI(
+        api_key=plugin_config.oneapi_key, base_url=plugin_config.oneapi_url
+    )
 else:
-    proxy = ""
+    client = AsyncOpenAI(api_key=plugin_config.oneapi_key)
 
-if not plugin_config.openai_api_key:
-    raise ConfigError("请设置 openai_api_key")
+model_id = plugin_config.oneapi_model
 
-api_key = plugin_config.openai_api_key
-model_id = plugin_config.openai_model_name
-max_limit = plugin_config.openai_max_history_limit
-public = plugin_config.chatgpt_turbo_public
+# public = plugin_config.chatgpt_turbo_public
 session = {}
 
 # 带上下文的聊天
@@ -42,87 +63,121 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
     # 若未开启私聊模式则检测到私聊就结束
     if isinstance(event, PrivateMessageEvent) and not plugin_config.enable_private_chat:
         chat_record.finish("对不起，私聊暂不支持此功能。")
-
-    # 检测是否填写 API key
-    if api_key == "":
-        await chat_record.finish(MessageSegment.text("请先配置openai_api_key"), at_sender=True)
-
-    # 提取提问内容
     content = msg.extract_plain_text()
+    img_url = helpers.extract_image_urls(event.message)
     if content == "" or content is None:
-        await chat_record.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
-
-    await chat_record.send(MessageSegment.text("ChatGPT正在思考中......"))
-
-    # 创建会话ID
-    session_id = create_session_id(event)
-
-    # 初始化保存空间
+        await chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
+    await chat_request.send(
+        MessageSegment.text("ChatGPT正在思考中......"), at_sender=True
+    )
+    session_id = event.get_session_id()
     if session_id not in session:
-        session[session_id] = ChatSession(api_key=api_key, model_id=model_id, max_limit=max_limit)
+        session[session_id] = []
 
-    # 开始请求
-    try:
-        res = await session[session_id].get_response(content, proxy)
-
-    except Exception as error:
-        await chat_record.finish(str(error), at_sender=True)
-    await chat_record.finish(MessageSegment.text(res), at_sender=True)
+    if not img_url:
+        try:
+            session[session_id].append({"role": "user", "content": content})
+            response = await client.chat.completions.create(
+                model=model_id,
+                messages=session[session_id],
+            )
+        except Exception as error:
+            await chat_record.finish(str(error), at_sender=True)
+        await chat_record.finish(
+            MessageSegment.text(str(response.choices[0].message.content)),
+            at_sender=True,
+        )
+    else:
+        try:
+            image_data = base64.b64encode(httpx.get(img_url[0]).content).decode("utf-8")
+            session[session_id].append(
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": content},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{image_data}"},
+                        },
+                    ],
+                }
+            )
+            response = await client.chat.completions.create(
+                model=model_id, messages=session[session_id]
+            )
+        except Exception as error:
+            await chat_record.finish(str(error), at_sender=True)
+        await chat_record.finish(
+            MessageSegment.text(response.choices[0].message.content), at_sender=True
+        )
 
 
 # 不带记忆的对话
 @chat_request.handle()
 async def _(event: MessageEvent, msg: Message = CommandArg()):
-
     if isinstance(event, PrivateMessageEvent) and not plugin_config.enable_private_chat:
         chat_record.finish("对不起，私聊暂不支持此功能。")
 
+    img_url = helpers.extract_image_urls(event.message)
     content = msg.extract_plain_text()
     if content == "" or content is None:
-        await chat_request.finish(MessageSegment.text("内容不能为空！"))
-
-    await chat_request.send(MessageSegment.text("ChatGPT正在思考中......"))
-
-    try:
-        res = await get_response(content, proxy)
-
-    except Exception as error:
-        await chat_request.finish(str(error))
-    await chat_request.finish(MessageSegment.text(res))
+        await chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
+    await chat_request.send(
+        MessageSegment.text("ChatGPT正在思考中......"), at_sender=True
+    )
+    if not img_url:
+        try:
+            response = await client.chat.completions.create(
+                model=model_id,
+                messages=[{"role": "user", "content": content}],
+            )
+        except Exception as error:
+            await chat_request.finish(str(error), at_sender=True)
+        await chat_request.finish(
+            MessageSegment.text(str(response.choices[0].message.content)),
+            at_sender=True,
+        )
+    else:
+        try:
+            image_data = base64.b64encode(httpx.get(img_url[0]).content).decode("utf-8")
+            response = await client.chat.completions.create(
+                model=model_id,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": content},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{image_data}"
+                                },
+                            },
+                        ],
+                    }
+                ],
+            )
+        except Exception as error:
+            await chat_request.finish(str(error), at_sender=True)
+        await chat_request.finish(
+            MessageSegment.text(response.choices[0].message.content), at_sender=True
+        )
 
 
 @clear_request.handle()
 async def _(event: MessageEvent):
-    del session[create_session_id(event)]
-    await clear_request.finish(MessageSegment.text("成功清除历史记录！"), at_sender=True)
-
-
-# 根据消息类型创建会话id
-def create_session_id(event):
-    if isinstance(event, PrivateMessageEvent):
-        session_id = f"Private_{event.user_id}"
-    elif public:
-        session_id = event.get_session_id().replace(f"{event.user_id}", "Public")
-    else:
-        session_id = event.get_session_id()
-    return session_id
-
-# 发送请求模块
-async def get_response(content, proxy):
-    openai.api_key = api_key
-    if proxy != "":
-        openai.proxy = proxy
-
-    res_ = await openai.ChatCompletion.acreate(
-        model=model_id,
-        messages=[
-            {"role": "user", "content": content}
-        ]
+    del session[event.get_session_id()]
+    await clear_request.finish(
+        MessageSegment.text("成功清除历史记录！"), at_sender=True
     )
 
-    res = res_.choices[0].message.content
 
-    while res.startswith("\n") != res.startswith("？"):
-        res = res[1:]
-
-    return res
+# # 根据消息类型创建会话id
+# def create_session_id(event):
+#     if isinstance(event, PrivateMessageEvent):
+#         session_id = f"Private_{event.user_id}"
+#     elif public:
+#         session_id = event.get_session_id().replace(f"{event.user_id}", "Public")
+#     else:
+#         session_id = event.get_session_id()
+#     return session_id

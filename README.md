@@ -10,10 +10,8 @@
 </div>
 
 # 介绍
-- 本插件适配OpenAI在2023年3月1日发布的最新版API，可以在nonebot中调用OpenAI的ChatGPT生产环境下的模型（GPT3.5-turbo）进行回复。
-- 接口调用速度与网络环境有关，经过测试，大陆外的服务器的OpenAI API响应时间能在十秒之内。
-- 免费版OpenAI的调用速度限制为20次/min
-- 本插件具有上下文回复功能(可选)，根据每个成员与机器人最近30条（可修改）的聊天记录进行响应回复,该功能消耗服务器资源较大
+- 本插件适配OneAPI和OpenAI接口，可以在nonebot中调用OpenAI官方或是OneAPI(gpt系列模型,gemini-1.5-pro)接口的模型进行回复。
+- 本插件具有上下文回复和多模态识别（识图）功能。
 # 安装
 
 * 手动安装
@@ -36,17 +34,18 @@
 在Bot根目录下的.env文件中追加如下内容：
 
 ```
-OPENAI_API_KEY = key
-OPENAI_MODEL_NAME = "gpt-3.5-turbo"
-OPENAI_HTTP_PROXY = "http://127.0.0.1:8001"    # 请使用代理访问api，中国大陆/香港IP调用API有几率会被封禁
+oneapi_key = ""  # OpenAI官方或者是支持OneAPI的大模型中转服务商提供的KEY
+oneapi_model = "gpt-4o" # 使用的语言大模型，使用识图功能请填写合适的大模型名称
 ```
 
 可选内容：
 ```
-OPENAI_MAX_HISTORY_LIMIT = 30   # 保留与每个用户的聊天记录条数
-ENABLE_PRIVATE_CHAT = True   # 私聊开关，默认开启，改为False关闭
+oneapi_url = ""  # （可选）大模型中转服务商提供的中转地址，使用OpenAI官方服务不需要填写
+enable_private_chat = True   # 私聊开关，默认开启，改为False关闭
 ```
 
+# 效果
+![](demo.jpg)
 
 # 使用方法
 
