@@ -10,8 +10,10 @@
 </div>
 
 # 介绍
-- 本插件适配OneAPI和OpenAI接口，可以在nonebot中调用OpenAI官方或是OneAPI(gpt系列模型,gemini-1.5-pro)接口的模型进行回复。
-- 本插件具有上下文回复和多模态识别（识图）功能。
+- 本插件适配DeepSeek、OneAPI和OpenAI接口，可以在nonebot中调用OpenAI官方或是OneAPI(gpt,gemini,Claude系列模型)接口的模型进行回复
+- 支持DeepSeek-R1思维链回复
+- 本插件具有上下文回复和多模态识别（识图）功能（需要模型支持）
+
 # 安装
 
 * 手动安装
@@ -42,10 +44,13 @@ oneapi_model = "gpt-4o" # 使用的语言大模型，使用识图功能请填写
 ```
 oneapi_url = ""  # （可选）大模型中转服务商提供的中转地址，使用OpenAI官方服务不需要填写
 enable_private_chat = True   # 私聊开关，默认开启，改为False关闭
+r1_reason = True  # DeepSeek-R1模型思维链显示开关
 ```
 
 # 效果
 ![](demo.jpg)
+![](demo2.png)
+![](demo3.png)
 
 # 使用方法
 
