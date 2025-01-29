@@ -70,7 +70,7 @@ async def _(bot: Bot, event: MessageEvent, msg: Message = CommandArg()):
     if content == "" or content is None:
         await chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
     await chat_request.send(
-        MessageSegment.text("大模型正在思考中......"), at_sender=True
+        MessageSegment.text(f"{model_id}正在思考中......"), at_sender=True
     )
     session_id = event.get_session_id()
     if session_id not in session:
@@ -161,7 +161,7 @@ async def _(bot: Bot, event: MessageEvent, msg: Message = CommandArg()):
     if content == "" or content is None:
         await chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
     await chat_request.send(
-        MessageSegment.text("ChatGPT正在思考中......"), at_sender=True
+        MessageSegment.text(f"{model_id}正在思考中......"), at_sender=True
     )
     if not img_url or "deepseek" in model_id:
         try:
