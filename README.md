@@ -37,12 +37,12 @@
 
 ```
 oneapi_key = ""  # OpenAI官方或者是支持OneAPI的大模型中转服务商提供的KEY
-oneapi_model = "gpt-4o" # 使用的语言大模型，使用识图功能请填写合适的大模型名称
+oneapi_model = "gpt-4o" # 调用的大模型名称，使用deepseek请填写"deepseek-chat"或"deepseek-reasoner"
 ```
 
 可选内容：
 ```
-oneapi_url = ""  # （可选）大模型中转服务商提供的中转地址，使用OpenAI官方服务不需要填写
+oneapi_url = ""  # （可选）大模型中转API地址，使用deepseek请填写"https://api.deepseek.com"，使用OpenAI官方服务不需要填写
 enable_private_chat = True   # 私聊开关，默认开启，改为False关闭
 r1_reason = True  # DeepSeek-R1模型思维链显示开关
 ```
