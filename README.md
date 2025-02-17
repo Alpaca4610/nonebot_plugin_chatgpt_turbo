@@ -10,8 +10,8 @@
 </div>
 
 # 介绍
-- 本插件适配DeepSeek、OneAPI和OpenAI接口，可以在nonebot中调用OpenAI官方或是OneAPI(gpt,gemini,Claude系列模型)接口的模型进行回复
-- 支持DeepSeek-R1思维链回复
+- 本插件适配OpenAI接口兼容的大模型(OpenAI官方、DeepSeek、硅基流动)
+- 支持大模型思维链展示（需要模型支持）
 - 本插件具有上下文回复和多模态识别（识图）功能（需要模型支持）
 
 # 安装
@@ -34,17 +34,19 @@
 # 配置文件
 
 在Bot根目录下的.env文件中追加如下内容：
+必填内容：
 
 ```
 oneapi_key = ""  # OpenAI官方或者是支持OneAPI的大模型中转服务商提供的KEY
-oneapi_model = "gpt-4o" # 调用的大模型名称，使用deepseek请填写"deepseek-chat"或"deepseek-reasoner"
+oneapi_model = "gpt-4o" # 调用的大模型名称
 ```
 
-可选内容：
+可选内容（填True为开启，False为关闭）：
 ```
-oneapi_url = ""  # （可选）大模型中转API地址，使用deepseek请填写"https://api.deepseek.com"，使用OpenAI官方服务不需要填写
-enable_private_chat = True   # 私聊开关，默认开启，改为False关闭
+oneapi_url = ""  # 中转API地址，使用deepseek请填写"https://api.deepseek.com"，使用硅基流动请填写"https://api.siliconflow.cn/v1"，使用OpenAI官方服务不需要填写
+enable_private_chat = True   # 私聊开关
 r1_reason = True  # DeepSeek-R1模型思维链显示开关
+merge_msg = False # 是否合并转发回复
 ```
 
 # 效果

@@ -2,7 +2,7 @@ import base64
 import httpx
 import nonebot
 
-from nonebot import on_command
+from nonebot import on_command,require
 from nonebot.params import CommandArg
 from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import (
@@ -13,13 +13,17 @@ from nonebot.adapters.onebot.v11 import (
     helpers,
     Bot
 )
+
+require("nonebot_plugin_saa")
+from nonebot_plugin_saa import Text, MessageFactory, AggregatedMessageFactory
+
 from nonebot.plugin import PluginMetadata
 from .config import Config, ConfigError
 from openai import AsyncOpenAI
 
 __plugin_meta__ = PluginMetadata(
     name="支持OneAPI、DeepSeek、OpenAI聊天Bot",
-    description="具有上下文关联和多模态识别（OpenAI），适配OneAPI、DeepSeek官方，OpenAI官方的nonebot插件。",
+    description="具有上下文关联和多模态识别（OpenAI），适配OneAPI、硅基流动，DeepSeek官方，OpenAI官方的nonebot插件。",
     usage="""
     @机器人发送问题时机器人不具有上下文回复的能力
     chat 使用该命令进行问答时，机器人具有上下文回复的能力
@@ -64,19 +68,18 @@ clear_request = on_command("clear", block=True, priority=1)
 async def _(bot: Bot, event: MessageEvent, msg: Message = CommandArg()):
     # 若未开启私聊模式则检测到私聊就结束
     if isinstance(event, PrivateMessageEvent) and not plugin_config.enable_private_chat:
-        chat_record.finish("对不起，私聊暂不支持此功能。")
+        await Text("对不起，私聊暂不支持此功能。").finish()
     content = msg.extract_plain_text()
     img_url = helpers.extract_image_urls(event.message)
     if content == "" or content is None:
-        await chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
-    await chat_request.send(
-        MessageSegment.text(f"{model_id}正在思考中......"), at_sender=True
-    )
+        await Text("内容不能为空！").finish(at_sender=True, reply=True)
+    await Text(f"{model_id}正在思考中......").send(at_sender=True, reply=True)
+
     session_id = event.get_session_id()
     if session_id not in session:
         session[session_id] = []
 
-    if not img_url or "deepseek" in model_id:
+    if not img_url:
         try:
             session[session_id].append({"role": "user", "content": content})
             response = await client.chat.completions.create(
@@ -84,46 +87,23 @@ async def _(bot: Bot, event: MessageEvent, msg: Message = CommandArg()):
                 messages=session[session_id],
             )
         except Exception as error:
-            await chat_record.finish(str(error), at_sender=True)
-            
-        session[session_id].append({"role": "assistant", "content": response.choices[0].message.content})
-        if model_id == "deepseek-reasoner" and plugin_config.r1_reason:
-            if isinstance(event, PrivateMessageEvent):
-                await chat_record.send(
-                    MessageSegment.text(
-                        "思维链\n" + str(response.choices[0].message.reasoning_content)),
-                    at_sender=True,
-                )
-                await chat_record.finish(
-                    MessageSegment.text(
-                        "回复\n" + str(response.choices[0].message.content)),
-                    at_sender=True,
-                )
-            else:
-                msgs = []
-                msgs.append({
-                    "type": "node",
-                    "data": {
-                        "name": "DeepSeek-R1思维链",
-                        "uin": bot.self_id,
-                        "content": MessageSegment.text(str(response.choices[0].message.reasoning_content))
-                    }
-                })
+            await Text("报错：" + str(error)).finish(at_sender=True, reply=True)
 
-                msgs.append({
-                    "type": "node",
-                    "data": {
-                            "name": "DeepSeek-R1回复",
-                            "uin": bot.self_id,
-                            "content": MessageSegment.text(str(response.choices[0].message.content))
-                    }
-                })
-                await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=msgs)
+        session[session_id].append(
+            {"role": "assistant", "content": response.choices[0].message.content})
+
+        mf2 = MessageFactory([Text(f"{model_id}回复\n" + str(response.choices[0].message.content))])
+        
+        if hasattr(response.choices[0].message, 'reasoning_content') and plugin_config.r1_reason:
+            reasoning_content = response.choices[0].message.reasoning_content
+            mf1 = MessageFactory([Text(f"{model_id}思维链\n" + str(reasoning_content))])
+            amf = AggregatedMessageFactory([mf1, mf2])
+            await amf.finish()
         else:
-            await chat_record.finish(
-                MessageSegment.text(str(response.choices[0].message.content)),
-                at_sender=True,
-            )
+            if plugin_config.merge_msg:
+                await AggregatedMessageFactory([mf2]).finish()
+            else:
+                await Text(f"{model_id}回复\n" + str(response.choices[0].message.content)).finish(at_sender=True, reply=True)
     else:
         try:
             image_data = base64.b64encode(
@@ -144,70 +124,47 @@ async def _(bot: Bot, event: MessageEvent, msg: Message = CommandArg()):
                 model=model_id, messages=session[session_id]
             )
         except Exception as error:
-            await chat_record.finish(str(error), at_sender=True)
-        await chat_record.finish(
-            MessageSegment.text(response.choices[0].message.content), at_sender=True
-        )
+            await Text("报错："+str(error)+"，很可能因为该模型不支持多模态").finish(at_sender=True, reply=True)
+        session[session_id].append(
+            {"role": "assistant", "content": response.choices[0].message.content})
+        if plugin_config.merge_msg:
+                AggregatedMessageFactory([mf2]).finish()
+        else:
+            await Text(f"{model_id}回复\n" + str(response.choices[0].message.content)).finish(at_sender=True, reply=True)
 
 
 # 不带记忆的对话
 @chat_request.handle()
 async def _(bot: Bot, event: MessageEvent, msg: Message = CommandArg()):
     if isinstance(event, PrivateMessageEvent) and not plugin_config.enable_private_chat:
-        chat_record.finish("对不起，私聊暂不支持此功能。")
-
-    img_url = helpers.extract_image_urls(event.message)
+        await Text("对不起，私聊暂不支持此功能。").finish()
     content = msg.extract_plain_text()
+    img_url = helpers.extract_image_urls(event.message)
     if content == "" or content is None:
-        await chat_request.finish(MessageSegment.text("内容不能为空！"), at_sender=True)
-    await chat_request.send(
-        MessageSegment.text(f"{model_id}正在思考中......"), at_sender=True
-    )
-    if not img_url or "deepseek" in model_id:
+        await Text("内容不能为空！").finish(at_sender=True, reply=True)
+    await Text(f"{model_id}正在思考中......").send(at_sender=True, reply=True)
+
+    if not img_url:
         try:
             response = await client.chat.completions.create(
                 model=model_id,
                 messages=[{"role": "user", "content": content}],
             )
         except Exception as error:
-            await chat_request.finish(str(error), at_sender=True)
-        if model_id == "deepseek-reasoner" and plugin_config.r1_reason:
-            if isinstance(event, PrivateMessageEvent):
-                await chat_record.send(
-                    MessageSegment.text(
-                        "思维链\n" + str(response.choices[0].message.reasoning_content)),
-                    at_sender=True,
-                )
-                await chat_record.finish(
-                    MessageSegment.text(
-                        "回复\n" + str(response.choices[0].message.content)),
-                    at_sender=True,
-                )
-            else:
-                msgs = []
-                msgs.append({
-                    "type": "node",
-                    "data": {
-                        "name": "DeepSeek-R1思维链",
-                        "uin": bot.self_id,
-                        "content": MessageSegment.text(str(response.choices[0].message.reasoning_content))
-                    }
-                })
+            await Text("报错：" + str(error)).finish(at_sender=True, reply=True)
 
-                msgs.append({
-                    "type": "node",
-                    "data": {
-                            "name": "DeepSeek-R1回复",
-                            "uin": bot.self_id,
-                            "content": MessageSegment.text(str(response.choices[0].message.content))
-                    }
-                })
-                await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=msgs)
+        mf2 = MessageFactory([Text(f"{model_id}回复\n" + str(response.choices[0].message.content))])
+        
+        if hasattr(response.choices[0].message, 'reasoning_content') and plugin_config.r1_reason:
+            reasoning_content = response.choices[0].message.reasoning_content
+            mf1 = MessageFactory([Text(f"{model_id}思维链\n" + str(reasoning_content))])
+            amf = AggregatedMessageFactory([mf1, mf2])
+            await amf.finish()
         else:
-            await chat_record.finish(
-                MessageSegment.text(str(response.choices[0].message.content)),
-                at_sender=True,
-            )
+            if plugin_config.merge_msg:
+                await AggregatedMessageFactory([mf2]).finish()
+            else:
+                await Text(f"{model_id}回复\n" + str(response.choices[0].message.content)).finish(at_sender=True, reply=True)
     else:
         try:
             image_data = base64.b64encode(
@@ -230,10 +187,11 @@ async def _(bot: Bot, event: MessageEvent, msg: Message = CommandArg()):
                 ],
             )
         except Exception as error:
-            await chat_request.finish(str(error), at_sender=True)
-        await chat_request.finish(
-            MessageSegment.text(response.choices[0].message.content), at_sender=True
-        )
+            await Text("报错："+str(error)+"，很可能因为该模型不支持多模态").finish(at_sender=True, reply=True)
+        if plugin_config.merge_msg:
+                AggregatedMessageFactory([mf2]).finish()
+        else:
+            await Text(f"{model_id}回复\n" + str(response.choices[0].message.content)).finish(at_sender=True, reply=True)
 
 
 @clear_request.handle()

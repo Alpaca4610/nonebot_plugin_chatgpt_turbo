@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-chatgpt-turbo"
-version = "1.1.2"
+version = "1.2.0"
 description = "A nonebot plugin for oneapi and openai"
 authors = ["Alpaca <alpaca@bupt.edu.cn>"]
 license = "MIT"
@@ -10,7 +10,8 @@ readme = "README.md"
 python = "^3.8"
 nonebot2 = "^2.0.0rc3"
 nonebot-adapter-onebot = "^2.2.1"
-openai = "^1.30.5"
+openai = "^1.55.3"
+nonebot_plugin_saa = "^0.7.1"
 
 [[tool.poetry.source]]
 name = "tsinghua"
